@@ -1,0 +1,47 @@
+Module 2 - Deploy an App using kubectl
+
+- create a Kubernetes Deployment configuration, the control plane schedules the application instances included in that deployment to run on individual nodes in the cluster
+- the deployment controller continously monitors the instances, if the node hosting an instance goes down or is deleted, the deployment controller replaces the instance with an instance on another node in the cluster
+- it is a self-healing mechanism to address machine failure or maintenance
+- create and manage a deployment by using the kubernetes CLI - kubectl, it uses the kubernetes API to interact with the cluster
+
+- A Pod is the basic execution unit of a kubernetes application. Each Pod represents a part of a workload that is running on your cluster
+
+kubectl basics:
+
+- the basic format of a kubectl command is: kubectl action resource
+- this performs the specified action (like create, describe) on the specified resource (like node, container)
+- you can use --help after the command to get additional info
+
+1. always check kubectl is configured to talk to the cluster by running kubectl version
+2. view the nodes in the cluster with kubectl get nodes
+3. deploy app with the kubectl create deployment. provide the name and ap image location (include the full repository url for images hosted outside Docker hub):
+   kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+
+3.1 this performed the following:
+
+- searched for a suitable node where an instance of the application could be run
+- scheduled the application to run on that Node
+- configured the cluster to reschedule the instance on a new Node when needed
+
+4. to list your deployments use the get deployments command
+
+5. view our app
+
+- Pods running inside Kubernetes are running on a private network. When we use kubectl, whe're interacting through an API endpoint to communicate with our application
+- the kubectl command can create a proxy that will forward communications into the cluster-wdide private network. The proxy can be terminated by pressing CTRL-C
+- open a second terminal window to run the proxy
+  echo -e "\n\n\n\e[92mStarting Proxy. After starting it will not output a response. e first Terminal Tab\n"
+
+- we now have a connection between our host (the online terminal) and the kubernetes cluster. The proxy enables direct access to the API from these terminals
+- go to the first terminal, and to see the APIs hosted use the curl command
+  curl http://localhost:8001/version
+
+- if Port 8001 is not accessible, ensure that the kubectl proxy started in the other terminal is running
+- the API server will automatically create an endpoint for each pod, based on the pod name, that is also accessible through the proxy
+- get the pod name
+  export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.mtadata.name}}{{"\n"}}{{end}}')
+  echo Name of the Pod: $POD_NAME
+
+- you can access the Pod through the API by running
+  curl http://localhost:8001/api/v1/namespaces/default/pods/$POD_NAME/

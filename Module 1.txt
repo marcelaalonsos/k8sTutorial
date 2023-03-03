@@ -1,0 +1,8 @@
+Module 1 - Create a Kubernets cluster
+
+- install minikube CLI
+- start the cluster by running minikube start
+- to interact with Kubernetes, use the kubectl CLI
+- check if kubectl is intalled by running kubectl version command
+- view cluster details by running kubectl cluster-info
+- view nodes, run kubectl get nodes

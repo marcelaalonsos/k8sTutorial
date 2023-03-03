@@ -1,0 +1,58 @@
+Using a Service to Expose your App
+
+- Kubernetes Pods are mortal. Pods have a lifecycle. When a worker node dies, the Pods running on the Node are also lost. A ReplicaSet might then dynamically drive the cluster back to the desired state via the creation of new Pods to keep your application running
+- each Pod in a Kubernetes cluster has a unique IP address, even Pods on the same Node, so there needs to be a way of automatically reconciling changes among Pods so that your applications continue to function
+- A Kubernetes Service is an abstraction layer which defines a logical set of Pods and enables external traffic exposure, load balancing and service discovery for those Pods
+
+Services can be exposed in different ways by specifying a type in the ServiceSpec:
+- ClusterIp - exposes the service on an internal IP in the cluster
+- NodePort - exposes the service on the same port of each selected Node in the cluster using NAT
+- LoadBalancer - creates an external load balancer in the current cloud and assigns a fixed, external IP to the service
+- ExternalName - maps the service to the contents of the externalName field
+
+Services and Labels
+- Services match a set of Pods using labels and selectors, a grouping primitive that allows logical operation on objects in Kubernetes. Labels are key/value pairs attached to objects and can be used in any number of ways:
+  - designate objects for development, test, and production
+  - embed version tags
+  - classify an object using tags
+
+- Labels can be attached to objects at creation time or later on. They can be modified at any time
+
+1. create new service
+kubectl get pods
+kubectl get services
+2. To create a new service and expose it to external traffic we’ll use the expose command with NodePort as parameter (minikube does not support the LoadBalancer option yet)
+kubectl expose deployment/kubernetes-bootcamp --type="NodePort" --port 8080
+3. run get services Again
+4. find out what port was opened externally, run describe service
+kubectl describe services/kubernetes-bootcamp
+5. create an environment variable called NODE_PORT that has the value of the port assigned
+export NODE_PORT=$(kubectl get services/kubernetes-bootcamp -o go-template='{{(index .spec.ports 0).nodePort}}')
+echo NODE_PORT=$NODE_PORT
+6. test the app is exposed outside of the cluster using curl, the IP is the external port
+curl $(minikube ip):$NODE_PORT
+
+7. describe deployment command to see the name of the label
+kubectl describe deployment
+8. use label to query list of pods with -l as a parameter, followed by the label values
+kubectl get pods -l app=kubernetes-bootcamp
+9. you can do the same for the services
+kubectl get services -l app=kubernetes-bootcamp
+10. get the name of the pod and store it int eh POD_NAME variable
+export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+echo Name of the Pod: $POD_NAME
+11. To apply a new label we use the label command followed by the object type, object name and the new label
+kubectl label pods $POD_NAME version=v1
+12. This will apply a new label to our Pod (we pinned the application version to the Pod), and we can check it with the describe pod command
+kubectl describe pods $POD_NAME
+13. We see here that the label is attached now to our Pod. And we can query now the list of pods using the new labels
+kubectl get pods -l version=v1
+
+14. to delete a service ise delete service
+kubectl delete service -l app=kubernetes-bootcamp
+15. verify is gone
+kubectl get services
+16. To confirm that route is not exposed anymore you can curl the previously exposed IP and port
+curl $(minikube ip):$NODE_PORT
+17. The above proves that the app is not reachable anymore from outside of the cluster. You can confirm that the app is still running with a curl inside the pod
+kubectl exec -ti $POD_NAME -- curl localhost:8080

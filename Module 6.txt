@@ -1,0 +1,37 @@
+Update your App
+
+- Rolling updates allow Deployments' update to take place with zero downtime by incrementally updating Pods instances with new ones
+- If a Deployment is exposed publicly, the Service will load-balance the traffic only to available Pods during the update
+
+1. get deployments, get pods, describe pods
+2. To update the image of the application to version 2, use the set image command, followed by the deployment name and the new image version
+kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+2.1 The command notified the Deployment to use a different image for your app and initiated a rolling update
+3. check the status of the new pods running get pods
+4. check the app is running: describe service command
+kubectl describe services/kubernetes-bootcamp
+5. create and environmental variable called NODE_PORT
+export NODE_PORT=$(kubectl get services/kubernetes-bootcamp -o go-template='{{(index .spec.ports 0).nodePort}}')
+echo NODE_PORT=$NODE_PORT
+6. do a curl to the exposed ip and port
+curl $(minikube ip):$NODE_PORT
+6.1 Every time you run the curl command, you will hit a different Pod. Notice that all Pods are running the latest version (v2)
+7. you can also confirm the update by running the rollout status command
+kubectl rollout status deployments/kubernetes-bootcamp
+8. to view the current version of the app, run
+kubectl describe pods
+
+9. perform another update and deploy an image tagged with v10
+kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v10
+10. use get deplo to see the status of the deployment
+kubectl get deployments
+11. run kubeclt get pods
+11.1 Notice that some of the Pods have a status of ImagePullBackOff. To get more insight into the problem, run the describe pods command
+kubeclt describe pods
+11.2 In the Events section of the output for the affected Pods, notice that the v10 image version did not exist in the repository.To roll back the deployment to your last working version, use the rollout undo command
+kubectl rollout undo deployments/kubernetes-bootcamp
+11.3 The rollout undo command reverts the deployment to the previous known state (v2 of the image). Updates are versioned and you can revert to any previously known state of a deployment.
+12. Use the get pods commands to list the Pods again
+kubeclt get pods
+13. Four Pods are running. To check the image deployed on these Pods, use the describe pods command
+kubeclt describe pods

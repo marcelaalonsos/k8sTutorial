@@ -1,0 +1,56 @@
+Hello Minikube
+
+- run minikube start
+- run minikube dashboard
+- stop proxy by Ctrl + C
+- if you don't want to open a web broser run minikube dashboad --url
+- use the kubectl create commande to create a Deployment that manages a Pod. The Pod runs a Container based on the provided Docker image
+  kubectl create deployment hello-node --image=registry.k8s.io/e2e-test-images/agnhost:2.39 -- /agnhost netexec --http-port=8080
+
+- view the deployment
+  kubectl get deployment
+
+- view the pod
+  kubectl get pods
+
+- view cluster events
+  kubectl get events
+
+- view kubectl configuration
+  kubectl config view
+
+1. Create a Service
+
+To make the hello-node Container accessible from the outside the Kubernetes virtual network, you have to expose the Pod as a Kubernetes Service
+
+- expose the Pod to the publuc internet
+  kubectl expose deployment hello-node --type=LoadBalancer --port-8080
+
+-view the services you created
+kubectl get services
+
+2. Enable addons
+
+- list the current supported addons
+  minikube addons list
+
+- enable an addon, for example metrics-server
+  minikube addons enable metrics-server
+
+- get the Pod and service you created
+  kubectl get pod, svc -n kiube-system
+
+- to disable addon, for example metrics-server
+  minikube addons disable metrics-server
+
+3. Clean Up
+
+- clean up the resources you created in your cluster:
+  kubectl delete service hello-node
+  kubeclt delte deployment hello-node
+
+- optionally, stop the Minikube virtual machine:
+  minikube stop
+
+- optionally, delete the Minikube VM:
+  minikube delete
